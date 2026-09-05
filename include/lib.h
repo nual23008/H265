@@ -35,3 +35,4 @@ void GetBlockV(Frame* frame, Block* block, int block_x, int block_y);
 void GetReferencePixelY(Frame* frame, Block* block, int block_x, int block_y, uint8_t* top, uint8_t* left);
 void GetReferencePixelU(Frame* frame, Block* block, int block_x, int block_y, uint8_t* top, uint8_t* left);
 void GetReferencePixelV(Frame* frame, Block* block, int block_x, int block_y, uint8_t* top, uint8_t* left);
+uint8_t calculateDC(uint8_t* top, uint8_t* left, int block_size);
