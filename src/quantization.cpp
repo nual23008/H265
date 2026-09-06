@@ -1,5 +1,5 @@
 // src/quantization.cpp
-// Tham chiếu HM: TComTrQuant.cpp (xQuant, xDeQuant), TComRom.cpp
+// Tham khảo từ https://github.com/listenlink/HM.git: TComTrQuant.cpp (xQuant, xDeQuant), TComRom.cpp
 #include "quantization.h"
 
 #include <algorithm>
