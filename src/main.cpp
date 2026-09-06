@@ -5,6 +5,7 @@
 #include "quantization.h"
 #include "residual.h"
 #include "transform.h"
+#include <lib.h>
 
 #include <cstdint>
 #include <fstream>
