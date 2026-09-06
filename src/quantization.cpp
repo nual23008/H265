@@ -6,11 +6,18 @@
 #include <cmath>
 #include <cstdlib>
 
+// Residual --> [Transform] --> Coefficient --> [Quantization] --> Level
+// Level --> [Dequantization] --> Coefficient' --> [Inverse Transform] --> Residual'
+
 namespace {
 
-// Bảng bước lượng tử cơ sở (Qstep * 64) và nghịch đảo ((1 << 20) / inv)
+// Qstep(QP) = Qstep(QP%6) * 2^(QP/6) = (kInvQuantScales[QP%6] / 64) * 2^(QP/6)
+// Bảng gốc, dùng trực tiếp cho dequantize (phép NHÂN)
 const int kInvQuantScales[6] = {40, 45, 51, 57, 64, 72};
-const int kQuantScales[6]    = {26214, 23302, 20560, 18396, 16384, 14564};
+
+// Bảng nghịch đảo của kInvQuantScales (đã phóng đại 2^20), dùng cho
+// quantize (phép CHIA) để thay bằng nhân + dịch bit — xem kQuantShift
+const int kQuantScales[6] = {26214, 23302, 20560, 18396, 16384, 14564};
 
 constexpr int kQuantShift  = 14; // Bù hệ số phóng đại 2^14 của kQuantScales
 constexpr int kIQuantShift = 6;  // Bù hệ số phóng đại 2^6 của kInvQuantScales
