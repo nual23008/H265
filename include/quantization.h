@@ -8,7 +8,8 @@
 // level = round(coeff/Qstep)
 
 // Theo paper H.265, dùng QP (Quantization Parameter) để xác định Qstep (Quantization Step Size)
-// QP tăng lên 6 thì Qstep tăng gấp đôi, nên Qstep(QP) = Qstep(QP%6) * 2^(QP/6)
+// QP tăng lên 6 thì Qstep tăng gấp đôi, nên Qstep(QP + 6) = 2 * Qstep(QP)
+// Mô hình hóa thành hàm Qstep theo QP: Qstep(QP) = Qstep(0) * 2^(QP/6)
 
 struct QpParam {
   int qp  = 0;
