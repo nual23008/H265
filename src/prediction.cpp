@@ -96,4 +96,6 @@ void DCpredictionFrame(Frame* frame, Frame* prediction_frame, int block_size) {
     delete[] top;
     delete[] left;
     DeleteBlock(block);
+
+    //toi la
 }
