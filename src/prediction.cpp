@@ -8,7 +8,7 @@ using namespace std;
 
 uint8_t calculateDC(uint8_t* top, uint8_t* left, int block_size) {
     int DC_value = 0;
-
+    
     for (int i = 0; i < block_size; i++) {
         DC_value += top[i];
         DC_value += left[i];
