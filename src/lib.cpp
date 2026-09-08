@@ -116,27 +116,27 @@ void GetTopReference(const Pixel* plane, Pixel* top, int width, int height, int 
     }
 }
 
-void GetTopLefterence(const Pixel* plane, Pixel* top, int width, int height, int block_x, int block_y, int block_size) {
+void GetLefterence(const Pixel* plane, Pixel* left, int width, int height, int block_x, int block_y, int block_size) {
     //Xét trong một block
     for (int row = 0; row < block_size; row++) {
         // Trường hợp ở góc trên bên trái frame
         if (block_x == 0 && block_y == 0) {
-            top[row].data = 128;
+            left[row].data = 128;
         }
         // Trường hợp ở mép trái 
         else if (block_x == 0 && block_y > 0) {
             int frame_idx = (block_y - 1) * width + block_x;
-            top[row].data = plane[frame_idx].data;
+            left[row].data = plane[frame_idx].data;
         }
         // Trường hợp ra số pixel vượt ngoài frame
         else if ((block_y + row) >= height) {
-            top[row].data = 0;
-            top[row].available = false;
+            left[row].data = 0;
+            left[row].available = false;
         }
         // Trường hợp bình thường ở giữa frame
         else {
             int frame_idx = ((block_x + row) + ((block_y - 1) * width));
-            top[row].data = plane[frame_idx].data;
+            left[row].data = plane[frame_idx].data;
         }
     }
 }

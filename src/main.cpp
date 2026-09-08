@@ -32,12 +32,33 @@ int main() {
     //     }
     // }
 
-    Pixel* top = new Pixel[8];
+    Pixel* top = new Pixel[2];
+    Pixel* left = new Pixel[2];
 
-    GetTopReference(frame->planeY, top, 4, 4, 0, 0, 4);
+    for (int i = 0; i < 4; i+=2) {
+        for (int j = 0; j < 4; j+=2) {
 
-    for (int i = 0; i < 8; i++) {
-        cout << static_cast<int>(top[i].data) << " ";
+            // lấy top, left
+            GetTopReference(frame->planeY, top, 4, 4, j, i, 2);
+            GetLeftReference(frame->planeY, left, 4, 4, j, i, 2);
+
+
+            for (int k = 0; k < 2; k++) {
+                cout << static_cast<int>(top[k].data) << " ";
+            }
+            cout << "\n";
+
+            for (int k = 0; k < 2; k++) {
+                cout << static_cast<int>(left[k].data) << " ";
+            }
+
+
+            cout << "\n";
+        }
+    }
+
+        for (int i = 0; i < 2; i++) {
+            cout << static_cast<int>(top[i].data) << " ";
     }
 
     delete top;
