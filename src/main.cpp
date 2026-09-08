@@ -42,14 +42,17 @@ int main() {
             GetTopReference(frame->planeY, top, 4, 4, j, i, 2);
             GetLeftReference(frame->planeY, left, 4, 4, j, i, 2);
 
+            cout << "TOP: ";
 
             for (int k = 0; k < 2; k++) {
                 cout << static_cast<int>(top[k].data) << " ";
             }
             cout << "\n";
 
+            cout << "LEFT" << "\n";
+
             for (int k = 0; k < 2; k++) {
-                cout << static_cast<int>(left[k].data) << " ";
+                cout << static_cast<int>(left[k].data) << "\n";
             }
 
 

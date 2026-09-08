@@ -116,7 +116,7 @@ void GetTopReference(const Pixel* plane, Pixel* top, int width, int height, int 
     }
 }
 
-void GetLefterence(const Pixel* plane, Pixel* left, int width, int height, int block_x, int block_y, int block_size) {
+void GetLeftReference(const Pixel* plane, Pixel* left, int width, int height, int block_x, int block_y, int block_size) {
     //Xét trong một block
     for (int row = 0; row < block_size; row++) {
         // Trường hợp ở góc trên bên trái frame
@@ -135,7 +135,7 @@ void GetLefterence(const Pixel* plane, Pixel* left, int width, int height, int b
         }
         // Trường hợp bình thường ở giữa frame
         else {
-            int frame_idx = ((block_x + row) + ((block_y - 1) * width));
+            int frame_idx = ((block_x - 1) + ((block_y + row) * width));
             left[row].data = plane[frame_idx].data;
         }
     }
