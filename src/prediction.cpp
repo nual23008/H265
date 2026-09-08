@@ -1,5 +1,6 @@
 #include "prediction.h"
 #include "lib.h"
+#include "common.h"
 
 #include <iostream>
 #include <cstdint>
@@ -19,18 +20,19 @@ uint8_t calculateDC(uint8_t* top, uint8_t* left, int block_size) {
     return (uint8_t)DC_value;
 }
 
-void DCpredictionBlock(Block* prediction_block, uint8_t DC_value) {
-    for (int block_h = 0; block_h < prediction_block->block_size; block_h++) {
-        for (int block_w = 0; block_w < prediction_block->block_size; block_w++) {
-            int prediction_block_idx = block_h * prediction_block->block_size + block_w;
-
-            prediction_block->data[prediction_block_idx] = DC_value;
-        }
-    }
+void DCpredictionBlock(Frame* reconstructed_frame, Block* prediction_block) {
+    uint8_t* top = new uint8_t[]
 }
 
 void DCpredictionFrame(Frame* frame, Frame* prediction_frame, int block_size) {
+    Block* block = CreateBlock(block_size)}
+
+void DCpredictionFrame(Frame* frame, Frame* prediction_frame, int block_size) {
     Block* block = CreateBlock(block_size);
+    uint8_t* top = new uint8_t[block_size];
+    uint8_t* left = new uint8_t[block_size];
+    int x_block;
+;
     uint8_t* top = new uint8_t[block_size];
     uint8_t* left = new uint8_t[block_size];
     int x_block;
