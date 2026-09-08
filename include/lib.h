@@ -26,9 +26,11 @@ struct Block
     Pixel* data;
 };
 
-// Frame* CreateFrame(int height, int width);
-// void DeleteFrame(Frame* frame);
-// Block* CreateBlock(int block_size);
-// void DeleteBlock(Block* block);
-// // bool ReadYUV(istream& input, Frame& frame);
-// void GetReferencePixel(Frame* frame, Block* block, int x_block, int y_block, uint8_t* top, uint8_t* left);
+Pixel* CreatePixel(uint8_t data);
+void DeletePixel(Pixel* pixel);
+Frame* CreateFrame(int width, int height);
+void DeleteFrame(Frame* frame);
+Block* CreateBlock(int block_size);
+void DeleteBlock(Block* block);
+void GetTopReference(const Pixel* plane, Pixel* top, int width, int height, int block_x, int block_y, int block_size);
+void GetTopReference(const Pixel* plane, Pixel* top, int width, int height, int block_x, int block_y, int block_size);

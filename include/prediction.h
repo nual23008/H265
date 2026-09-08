@@ -7,4 +7,3 @@ using namespace std;
 
 uint8_t calculateDC(uint8_t* top, uint8_t* left, int block_size);
 void DCpredictionBlock(Block* prediction_block, uint8_t DC_value);
-void DCpredictionFrame(Frame* frame, Frame* prediction_frame, int block_size);
