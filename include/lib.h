@@ -6,25 +6,29 @@
 
 using namespace std;
 
-struct Frame
-{
-    int frame_width;
-    int frame_height;
+#define FRAME_HEIGHT    1080
+#define FRAME_WIDTH     1920
 
-    uint8_t* data;
+struct Pixel {
+    uint8_t data;
+    bool available;
+};
+
+struct Frame {
+    Pixel* planeY;
+    Pixel* planeU;
+    Pixel* planeV;
 };
 
 
 struct Block
 {
-    int block_size;
-
-    uint8_t* data;
+    Pixel* data;
 };
 
-Frame* CreateFrame(int height, int width);
-void DeleteFrame(Frame* frame);
-Block* CreateBlock(int block_size);
-void DeleteBlock(Block* block);
-// bool ReadYUV(istream& input, Frame& frame);
-void GetReferencePixel(Frame* frame, Block* block, int x_block, int y_block, uint8_t* top, uint8_t* left);
+// Frame* CreateFrame(int height, int width);
+// void DeleteFrame(Frame* frame);
+// Block* CreateBlock(int block_size);
+// void DeleteBlock(Block* block);
+// // bool ReadYUV(istream& input, Frame& frame);
+// void GetReferencePixel(Frame* frame, Block* block, int x_block, int y_block, uint8_t* top, uint8_t* left);

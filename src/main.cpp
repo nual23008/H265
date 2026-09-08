@@ -11,3 +11,30 @@
 #include <fstream>
 #include <iostream>
 
+int main() {
+    Frame* frame = new Frame{};
+
+    frame->planeY = new Pixel[16]{};
+    frame->planeU = nullptr;
+    frame->planeV = nullptr;
+
+    for (int i = 0; i < 16; ++i) {
+        frame->planeY[i].data = static_cast<uint8_t>(i);
+        frame->planeY[i].available = true;
+    }
+
+    for (int i = 0; i < 16; ++i) {
+        cout
+            << static_cast<int>(frame->planeY[i].data)
+            << ' ';
+
+        if ((i + 1) % 4 == 0) {
+            cout << '\n';
+        }
+    }
+
+    delete[] frame->planeY;
+    delete frame;
+
+    return 0;
+}

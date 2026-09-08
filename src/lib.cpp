@@ -7,31 +7,42 @@
 
 using namespace std;
 
-Frame* CreateFrame(int height, int width) {
+Pixel* CreatePixel(uint8_t data) {
+    Pixel* pixel = new Pixel;
+    pixel->data = data;
+    pixel->available = true;
+
+    return pixel;
+}
+
+void DeletePixel(Pixel* pixel) {
+    delete[] pixel;
+}
+
+Frame* CreateFrame(int width, int height) {
     Frame* frame = new Frame;
-    frame->frame_height = height;
-    frame->frame_width = width;
 
-    const int Y_size = frame->frame_height * frame->frame_width;
-    const int UV_size = (frame->frame_height * frame->frame_width) / 4;
+    int Y_size = width * height;
+    int UV_size = (width / 2) * (height / 2);
 
-    frame->data = new uint8_t[Y_size + 2 * UV_size];
+    frame->planeY = new Pixel[Y_size, 0];
+    frame->planeU = new Pixel[UV_size, 0];
+    frame->planeV = new Pixel[UV_size, 0];
+
     return frame;
 }
 
 void DeleteFrame(Frame* frame) {
-    delete[] frame->data;
+    delete[] frame->planeY;
+    delete[] frame->planeU;
+    delete[] frame->planeV;
     delete frame;
 }
 
 Block* CreateBlock(int block_size) {
     Block* block = new Block;
-    
-    block->block_size = block_size;
 
-    const int number_of_block = block->block_size * block->block_size;
-
-    block->data = new uint8_t[number_of_block];
+    block->data = new Pixel[block_size * block_size];
 
     return block;
 }
@@ -40,6 +51,7 @@ void DeleteBlock(Block* block) {
     delete[] block->data;
     delete block;
 }
+
 
 // bool ReadYUV (istream& input, Frame& frame) {
 //     int Y_size = frame.frame_height * frame.frame_width;
@@ -79,7 +91,52 @@ void DeleteBlock(Block* block) {
 //     return true;
 // }
 
-void GetReferencePixel(Frame* frame, Block* block, int x_block, int y_block, uint8_t* top, uint8_t* left) {
-
+void GetTopReference(const Pixel* plane, Pixel* top, int width, int height, int block_x, int block_y, int block_size) {
+    //Xét trong một block
+    for (int col = 0; col < block_size; col++) {
+        // Trường hợp ở góc trên bên trái frame
+        if (block_x == 0 && block_y == 0) {
+            top[col].data = 128;
+        }
+        // Trường hợp ở mép trên
+        else if (block_x > 0 && block_y == 0) {
+            int frame_idx = block_y * width + (block_x - 1);
+            top[col].data = plane[frame_idx].data;
+        }
+        // Trường hợp ra số pixel vượt ngoài frame
+        else if ((block_x + col) >= width) {
+            top[col].data = 0;
+            top[col].available = false;
+        }
+        // Trường hợp bình thường ở giữa frame
+        else {
+            int frame_idx = ((block_x + col) + ((block_y - 1) * width));
+            top[col].data = plane[frame_idx].data;
+        }
+    }
 }
 
+void GetTopReference(const Pixel* plane, Pixel* top, int width, int height, int block_x, int block_y, int block_size) {
+    //Xét trong một block
+    for (int row = 0; row < block_size; row++) {
+        // Trường hợp ở góc trên bên trái frame
+        if (block_x == 0 && block_y == 0) {
+            top[row].data = 128;
+        }
+        // Trường hợp ở mép trái 
+        else if (block_x == 0 && block_y > 0) {
+            int frame_idx = (block_y - 1) * width + block_x;
+            top[row].data = plane[frame_idx].data;
+        }
+        // Trường hợp ra số pixel vượt ngoài frame
+        else if ((block_y + row) >= height) {
+            top[row].data = 0;
+            top[row].available = false;
+        }
+        // Trường hợp bình thường ở giữa frame
+        else {
+            int frame_idx = ((block_x + row) + ((block_y - 1) * width));
+            top[row].data = plane[frame_idx].data;
+        }
+    }
+}
