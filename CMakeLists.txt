@@ -14,4 +14,5 @@ add_executable(h265_demo
     src/quantization.cpp
     src/cabac.cpp
     src/bitstream.cpp
+    src/lib.cpp
 )

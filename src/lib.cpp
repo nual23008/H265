@@ -116,7 +116,7 @@ void GetTopReference(const Pixel* plane, Pixel* top, int width, int height, int 
     }
 }
 
-void GetTopReference(const Pixel* plane, Pixel* top, int width, int height, int block_x, int block_y, int block_size) {
+void GetTopLefterence(const Pixel* plane, Pixel* top, int width, int height, int block_x, int block_y, int block_size) {
     //Xét trong một block
     for (int row = 0; row < block_size; row++) {
         // Trường hợp ở góc trên bên trái frame
