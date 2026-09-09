@@ -5,5 +5,5 @@
 
 using namespace std;
 
-uint8_t calculateDC(uint8_t* top, uint8_t* left, int block_size);
-void DCpredictionBlock(Block* prediction_block, uint8_t DC_value);
+uint8_t calculateDC(Pixel* top, Pixel* left, int block_size);
+void DCpredictionBlock(Block* prediction_block, Pixel* top, Pixel* left, int block_size);

@@ -52,6 +52,19 @@ void DeleteBlock(Block* block) {
     delete block;
 }
 
+Block* GetBlock(const Pixel* plane, int block_x, int block_y, int block_size) {
+    Block* block = CreateBlock(block_size);
+    for (int row = 0; row < block_size; row++) {
+        for (int col = 0; col < block_size; col++) {
+            int frame_idx = (block_x + col) + (block_y + row) * block_size;
+            int plane_idx = col + row * block_size;
+
+            block->data[block_size].data = plane[plane_idx].data;
+        }
+    }
+
+    return block;
+}
 
 // bool ReadYUV (istream& input, Frame& frame) {
 //     int Y_size = frame.frame_height * frame.frame_width;

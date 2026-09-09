@@ -32,5 +32,6 @@ Frame* CreateFrame(int width, int height);
 void DeleteFrame(Frame* frame);
 Block* CreateBlock(int block_size);
 void DeleteBlock(Block* block);
+Block* GetBlock(const Pixel* plane, int block_x, int block_y, int block_size);
 void GetTopReference(const Pixel* plane, Pixel* top, int width, int height, int block_x, int block_y, int block_size);
 void GetLeftReference(const Pixel* plane, Pixel* left, int width, int height, int block_x, int block_y, int block_size);
