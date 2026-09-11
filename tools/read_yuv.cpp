@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include <iomanip>
 
 int main(){
     std::cout << "Hello, YUV!" << std::endl;
@@ -48,7 +49,14 @@ int main(){
     std::cout << "U[0] = " << (int)U[0] << std::endl;
     std::cout << "V[0] = " << (int)V[0] << std::endl;
 
-    
+    // In block 8x8 o goc tren trai (Top Left)
+    std::cout << "Block 8x8 at top left corner:" << std::endl;
+    for (int row = 0; row < 8; ++row) {
+        for (int col = 0; col < 8; ++col) {
+            std::cout << std::setw(3) << (int)Y[row * WIDTH + col] << " ";
+        }
+        std::cout << std::endl;
+    }
 
     return 0;
 }
