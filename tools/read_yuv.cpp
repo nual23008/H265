@@ -150,14 +150,14 @@ int main(){
     printStats("U", picture.U);
     printStats("V", picture.V);
 
-    // Bước 3: tách block N x N ra khỏi plane
+    // tách block N x N ra khỏi plane
     printBlock("Y 8x8 tai (row 0, col 0) - goc tren-trai:",       getBlock(picture.Y, 0, 0, 8), 8);
     printBlock("Y 8x8 tai (row 500, col 1000) - giua anh:",       getBlock(picture.Y, 500, 1000, 8), 8);
     printBlock("Y 8x8 tai (row 736, col 1216) - nhieu chi tiet:", getBlock(picture.Y, 736, 1216, 8), 8);
     printBlock("Y 8x8 tai (row 1076, col 0) - cham mep duoi:",    getBlock(picture.Y, 1076, 0, 8), 8);
     printBlock("U 4x4 tai (row 0, col 0):",                       getBlock(picture.U, 0, 0, 4), 4);
 
-    // Bước 4: chia ảnh thành lưới CTU ("Split into CTUs" trong Fig. 1)
+    //chia ảnh thành lưới CTU 
     const int CTU_SIZE = 16;
     const int numCtuCols = (WIDTH  + CTU_SIZE - 1) / CTU_SIZE;   // chia làm tròn LÊN
     const int numCtuRows = (HEIGHT + CTU_SIZE - 1) / CTU_SIZE;
