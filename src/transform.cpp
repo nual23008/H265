@@ -28,6 +28,18 @@ const int32_t kT8[kN * kN] = {
   18, -50,  75, -89,  89, -75,  50, -18,
 };
 
+const int16_t kT2[4] = {
+  64,  64,
+  64, -64
+};
+
+const int16_t kT4[16] = {
+  64,   64,   64,   64,
+  83,   36,  -36,  -83,
+  64,  -64,  -64,   64,
+  36,  -83,   83,  -36
+};
+
 // Thang của ma trận: các phần tử đã nhân 2^6.
 constexpr int kMatrixShift = 6;          // HM: g_transformMatrixShift = {6, 6}
 constexpr int kMaxTrDynamicRange = 15;

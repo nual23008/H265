@@ -9,6 +9,7 @@ include_directories(include)
 add_executable(h265_demo
     src/main.cpp
     src/prediction.cpp
+    src/angular_prediction.cpp
     src/residual.cpp
     src/transform.cpp
     src/quantization.cpp
@@ -16,3 +17,23 @@ add_executable(h265_demo
     src/bitstream.cpp
     src/lib.cpp
 )
+
+enable_testing()
+
+add_executable(test_cabac
+    test/test_cabac.cpp
+    src/cabac.cpp
+)
+
+add_test(NAME cabac_round_trip COMMAND test_cabac)
+
+add_executable(angular_prediction_demo
+    tools/angular_prediction_demo.cpp
+    src/angular_prediction.cpp
+)
+
+add_executable(test_angular_prediction
+    test/test_angular_prediction.cpp
+    src/angular_prediction.cpp
+)
+add_test(NAME angular_prediction COMMAND test_angular_prediction)

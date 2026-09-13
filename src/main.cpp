@@ -43,7 +43,7 @@ int main() {
         for (int j = 0; j < 4; j+=2) {
             // Lấy original block
             Block* original_block = CreateBlock(2);
-            original_block = GetBlock(frame->planeY, j, i, 2);
+            original_block = GetBlock(frame->planeY, j, i, 4, 4, 2);
             Pixel* top = new Pixel[2];
             Pixel* left = new Pixel[2];
 
@@ -93,6 +93,7 @@ int main() {
 
 
             delete[] top;
+            delete[] left;
             delete[] frame->planeY;
             delete frame;
         }

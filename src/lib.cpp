@@ -52,12 +52,12 @@ void DeleteBlock(Block* block) {
     delete block;
 }
 
-Block* GetBlock(const Pixel* plane, int block_x, int block_y, int block_size) {
+Block* GetBlock(const Pixel* plane, int block_x, int block_y, int frame_width, int frame_height, int block_size) {
     Block* block = CreateBlock(block_size);
     for (int row = 0; row < block_size; row++) {
         for (int col = 0; col < block_size; col++) {
-            int frame_idx = (block_x + col) + (block_y + row) * block_size;
-            int plane_idx = col + row * block_size;
+            int plane_idx = (block_x + col) + (block_y + row) * frame_width;
+            int block_idx = col + row * block_size;
 
             block->data[block_size].data = plane[plane_idx].data;
         }
