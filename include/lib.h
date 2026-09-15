@@ -40,5 +40,7 @@ void DeleteFrame(Frame* frame);
 Block* CreateBlock(int block_size);
 void DeleteBlock(Block* block);
 Block* GetBlock(const Pixel* plane, int block_x, int block_y, int frame_width, int frame_height, int block_size);
+// top/left phải có ít nhất block_size + 1 phần tử; hai hàm điền cả mẫu cuối.
+// Mẫu vượt mép phải/dưới lặp lại giá trị trước đó, available = false.
 void GetTopReference(const Pixel* plane, Pixel* top, int width, int height, int block_x, int block_y, int block_size);
 void GetLeftReference(const Pixel* plane, Pixel* left, int width, int height, int block_x, int block_y, int block_size);

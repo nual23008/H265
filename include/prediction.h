@@ -8,6 +8,7 @@ using namespace std;
 uint8_t calculateDC(Pixel* top, Pixel* left, int block_size);
 void DCpredictionBlock(Block* prediction_block, Pixel* top, Pixel* left, int block_size);
 
+// Planar và IntraPictureEstimate cần top/left có block_size + 1 mẫu đã điền.
 void PlanarPredictionBlock(Block* prediciton_block, Pixel* top, Pixel* left, int block_size);
 void VerticalPredictionBlock(Block* prediction_block, Pixel* top, Pixel* left, int block_size);
 void HorizontalPredictionBlock(Block* prediction_block, Pixel* top, Pixel* left, int block_size);

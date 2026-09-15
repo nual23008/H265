@@ -1,6 +1,5 @@
 #include "prediction.h"
 #include "lib.h"
-#include "common.h"
 
 #include <iostream>
 #include <cstdint>
