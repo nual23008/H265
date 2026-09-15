@@ -11,6 +11,7 @@
 #include "block_ops.h"   // computeResidual, sumAbsolute, blockVariance
 #include "intra_pred.h"  // RefSamples, getRefSamples, computeDcValue, predictDC
 #include "dct.h"         // forwardDct, inverseDct
+#include "quant.h"       // qStep, quantize, dequantize
 #include "debug_print.h" // printStats, printBlock, printRefSamples
 
 // Kết quả bước 4 mà bước 6 cần dùng lại
@@ -253,6 +254,45 @@ void demoDct(const Plane& paddedY, const CtuGridInfo& grid, int ctuSize) {
                  (grid.maxVarAddr / grid.numCtuCols) * ctuSize, (grid.maxVarAddr % grid.numCtuCols) * ctuSize, ctuSize);
 }
 
+// A1.3: lượng tử hoá. Chạy DCT -> Q -> IQ -> IDCT cho residual của CTU nhiều chi tiết nhất với nhiều QP.
+void demoQuant(const Plane& paddedY, const CtuGridInfo& grid, int ctuSize) {
+    std::cout << "\n=== A1.3: luong tu hoa ===" << std::endl;
+    std::cout << "Qstep:";
+    for (int qp : {0, 4, 10, 16, 22, 27, 32, 37, 51}) {
+        std::cout << "  QP" << qp << " = " << qStep(qp);
+    }
+    std::cout << std::endl;
+
+    const int N       = ctuSize;
+    const int topRow  = (grid.maxVarAddr / grid.numCtuCols) * ctuSize;
+    const int leftCol = (grid.maxVarAddr % grid.numCtuCols) * ctuSize;
+    RefSamples ref                = getRefSamples(paddedY, topRow, leftCol, N);   // tạm dùng ảnh gốc như bước 6
+    std::vector<int32_t> residual = computeResidual(getBlock(paddedY, topRow, leftCol, N), predictDC(ref, true));
+    std::vector<int32_t> coeff    = forwardDct(residual, N);
+
+    std::cout << "CTU nhieu chi tiet nhat (row " << topRow << ", col " << leftCol << "):" << std::endl;
+    for (int qp : {4, 22, 27, 32, 37}) {
+        std::vector<int32_t> level    = quantize(coeff, qp, N);
+        std::vector<int32_t> restored = inverseDct(dequantize(level, qp, N), N);
+
+        int numNonZero = 0;
+        long long sse = 0;                     // tổng bình phương sai số giữa residual khôi phục và residual gốc
+        for (int i = 0; i < N * N; ++i) {
+            if (level[i] != 0) ++numNonZero;
+            long long d = restored[i] - residual[i];
+            sse += d * d;
+        }
+        std::cout << "  QP " << qp << ": so level khac 0 = " << numNonZero << " / " << N * N
+                  << ",  MSE residual = " << static_cast<double>(sse) / (N * N) << std::endl;
+    }
+
+    const int showQp = 32;
+    std::vector<int32_t> level = quantize(coeff, showQp, N);
+    printBlock("Level tai QP 32:", level, N);
+    printBlock("Residual goc:", residual, N);
+    printBlock("Residual khoi phuc tai QP 32 (inverseDct(dequantize(level))):", inverseDct(dequantize(level, showQp, N), N), N);
+}
+
 int main(){
     std::cout << "Hello, YUV!" << std::endl;
 
@@ -301,6 +341,7 @@ int main(){
     demoDcPredictionOnCtus(padded.Y, grid, CTU_SIZE);                     // bước 6
     demoRecon(padded, CTU_SIZE);                                          // P2
     demoDct(padded.Y, grid, CTU_SIZE);                                    // A1.2
+    demoQuant(padded.Y, grid, CTU_SIZE);                                  // A1.3
 
     return 0;
 }

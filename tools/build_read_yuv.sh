@@ -18,6 +18,7 @@ SOURCES=(
     src/block_ops.cpp
     src/intra_pred.cpp
     src/dct.cpp
+    src/quant.cpp
 )
 
 mkdir -p out
