@@ -1,13 +1,17 @@
 // tools/read_yuv.cpp
 // Chương trình thử: đọc 1 frame YUV thật rồi in dữ liệu qua từng bước.
+#include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <vector>
 
-#include "picture.h"     // Plane, Picture, readFrame, padPicture, getBlock
+#include "picture.h"     // Plane, Picture, readFrame, padPicture, getBlock, writeBlock
 #include "block_ops.h"   // computeResidual, sumAbsolute, blockVariance
 #include "intra_pred.h"  // RefSamples, getRefSamples, computeDcValue, predictDC
+#include "dct.h"         // forwardDct, inverseDct
+#include "quant.h"       // qStep, quantize, dequantize
 #include "debug_print.h" // printStats, printBlock, printRefSamples
 
 // Kết quả bước 4 mà bước 6 cần dùng lại
@@ -158,6 +162,137 @@ void demoDcPredictionOnCtus(const Plane& paddedY, const CtuGridInfo& grid, int c
                      (grid.maxVarAddr / grid.numCtuCols) * ctuSize, (grid.maxVarAddr % grid.numCtuCols) * ctuSize, ctuSize);
 }
 
+// P2: ảnh tái tạo (recon) và writeBlock
+void demoRecon(const Picture& padded, int ctuSize) {
+    std::cout << "\n=== P2: anh tai tao (recon) ===" << std::endl;
+
+    // Ảnh tái tạo có cùng kích thước ảnh đã đệm, ban đầu toàn 0 (chưa CTU nào được mã hoá)
+    Picture recon;
+    initPicture(recon, padded.Y.width, padded.Y.height);
+    std::cout << "recon Y: " << recon.Y.width << "x" << recon.Y.height
+              << ",  U/V: " << recon.U.width << "x" << recon.U.height << std::endl;
+
+    // Kiểm tra 1: clip. Ghi block 4x4 có giá trị âm và > 255 rồi đọc lại.
+    const std::vector<int32_t> outOfRange = {
+        -300,  -1,   0,    1,
+          50, 128, 200,  254,
+         255, 256, 300, 1000,
+          -5, 260,  77,   99 };
+    writeBlock(recon.Y, 0, 0, 4, outOfRange);
+    printBlock("Ghi vao (truoc clip):", outOfRange, 4);
+    printBlock("Doc lai tu recon (sau clip):", getBlock(recon.Y, 0, 0, 4), 4);
+
+    // Kiểm tra 2: vì sao tham chiếu phải lấy từ recon.
+    // Giả lập CTU 0 bị lượng tử hoá làm lệch +5 so với ảnh gốc, ghi vào recon,
+    // rồi lấy mẫu tham chiếu cho CTU 1 (row 0, col 16) từ recon và từ ảnh gốc.
+    std::vector<int32_t> lossyCtu0 = getBlock(padded.Y, 0, 0, ctuSize);
+    for (int32_t& v : lossyCtu0) v += 5;
+    writeBlock(recon.Y, 0, 0, ctuSize, lossyCtu0);
+
+    RefSamples fromRecon    = getRefSamples(recon.Y,  0, ctuSize, ctuSize);
+    RefSamples fromOriginal = getRefSamples(padded.Y, 0, ctuSize, ctuSize);
+    printRefSamples("CTU 1 - tham chieu tu anh GOC:", fromOriginal);
+    printRefSamples("CTU 1 - tham chieu tu RECON (decoder chi co cai nay):", fromRecon);
+
+    int numDiff = (fromRecon.corner != fromOriginal.corner) ? 1 : 0;
+    for (int i = 0; i < 2 * ctuSize; ++i) {
+        if (fromRecon.top[i]  != fromOriginal.top[i])  ++numDiff;
+        if (fromRecon.left[i] != fromOriginal.left[i]) ++numDiff;
+    }
+    std::cout << "So mau tham chieu khac nhau: " << numDiff << " / " << 4 * ctuSize + 1 << std::endl;
+}
+
+// DCT thuận rồi nghịch cho residual (dự đoán DC) của một CTU: in hệ số, độ nén năng lượng, sai số khôi phục
+void demoDctOnCtu(const char* name, const Plane& plane, int topRow, int leftCol, int N) {
+    RefSamples ref                 = getRefSamples(plane, topRow, leftCol, N);   // tạm dùng ảnh gốc như bước 6
+    std::vector<int32_t> residual  = computeResidual(getBlock(plane, topRow, leftCol, N), predictDC(ref, true));
+    std::vector<int32_t> coeff     = forwardDct(residual, N);
+    std::vector<int32_t> restored  = inverseDct(coeff, N);
+
+    int maxError = 0;
+    for (int i = 0; i < N * N; ++i) {
+        maxError = std::max(maxError, std::abs(restored[i] - residual[i]));
+    }
+
+    // Nén năng lượng: bao nhiêu % năng lượng (tổng bình phương hệ số) nằm ở góc 4x4 tần số thấp
+    double lowEnergy = 0.0, totalEnergy = 0.0;
+    for (int r = 0; r < N; ++r) {
+        for (int c = 0; c < N; ++c) {
+            double e = static_cast<double>(coeff[r * N + c]) * coeff[r * N + c];
+            totalEnergy += e;
+            if (r < 4 && c < 4) lowEnergy += e;
+        }
+    }
+
+    std::cout << name << " (row " << topRow << ", col " << leftCol << "):" << std::endl;
+    printBlock("He so DCT (hang tren = tan so doc thap, cot trai = tan so ngang thap):", coeff, N, 7);
+    if (totalEnergy > 0) {
+        std::cout << "  Nang luong o goc 4x4 tan so thap: " << 100.0 * lowEnergy / totalEnergy << " %" << std::endl;
+    }
+    std::cout << "  Sai so lon nhat |inverseDct(forwardDct(residual)) - residual| = " << maxError << std::endl;
+}
+
+// A1.2: DCT số nguyên
+void demoDct(const Plane& paddedY, const CtuGridInfo& grid, int ctuSize) {
+    std::cout << "\n=== A1.2: DCT so nguyen ===" << std::endl;
+
+    // Kiểm tra 1: block phẳng giá trị 100 -> chỉ còn hệ số DC = 128 * 100, mọi hệ số AC = 0
+    for (int N : {8, 16}) {
+        std::vector<int32_t> flatCoeff = forwardDct(std::vector<int32_t>(N * N, 100), N);
+        int numNonZeroAc = 0;
+        for (int i = 1; i < N * N; ++i) {
+            if (flatCoeff[i] != 0) ++numNonZeroAc;
+        }
+        std::cout << "Block phang 100, N = " << N << ": DC = " << flatCoeff[0]
+                  << ", so he so AC khac 0 = " << numNonZeroAc << std::endl;
+    }
+
+    // Kiểm tra 2: residual thật của 2 CTU từ bước 6
+    demoDctOnCtu("[CTU phang nhat]", paddedY,
+                 (grid.minVarAddr / grid.numCtuCols) * ctuSize, (grid.minVarAddr % grid.numCtuCols) * ctuSize, ctuSize);
+    demoDctOnCtu("[CTU nhieu chi tiet nhat]", paddedY,
+                 (grid.maxVarAddr / grid.numCtuCols) * ctuSize, (grid.maxVarAddr % grid.numCtuCols) * ctuSize, ctuSize);
+}
+
+// A1.3: lượng tử hoá. Chạy DCT -> Q -> IQ -> IDCT cho residual của CTU nhiều chi tiết nhất với nhiều QP.
+void demoQuant(const Plane& paddedY, const CtuGridInfo& grid, int ctuSize) {
+    std::cout << "\n=== A1.3: luong tu hoa ===" << std::endl;
+    std::cout << "Qstep:";
+    for (int qp : {0, 4, 10, 16, 22, 27, 32, 37, 51}) {
+        std::cout << "  QP" << qp << " = " << qStep(qp);
+    }
+    std::cout << std::endl;
+
+    const int N       = ctuSize;
+    const int topRow  = (grid.maxVarAddr / grid.numCtuCols) * ctuSize;
+    const int leftCol = (grid.maxVarAddr % grid.numCtuCols) * ctuSize;
+    RefSamples ref                = getRefSamples(paddedY, topRow, leftCol, N);   // tạm dùng ảnh gốc như bước 6
+    std::vector<int32_t> residual = computeResidual(getBlock(paddedY, topRow, leftCol, N), predictDC(ref, true));
+    std::vector<int32_t> coeff    = forwardDct(residual, N);
+
+    std::cout << "CTU nhieu chi tiet nhat (row " << topRow << ", col " << leftCol << "):" << std::endl;
+    for (int qp : {4, 22, 27, 32, 37}) {
+        std::vector<int32_t> level    = quantize(coeff, qp, N);
+        std::vector<int32_t> restored = inverseDct(dequantize(level, qp, N), N);
+
+        int numNonZero = 0;
+        long long sse = 0;                     // tổng bình phương sai số giữa residual khôi phục và residual gốc
+        for (int i = 0; i < N * N; ++i) {
+            if (level[i] != 0) ++numNonZero;
+            long long d = restored[i] - residual[i];
+            sse += d * d;
+        }
+        std::cout << "  QP " << qp << ": so level khac 0 = " << numNonZero << " / " << N * N
+                  << ",  MSE residual = " << static_cast<double>(sse) / (N * N) << std::endl;
+    }
+
+    const int showQp = 32;
+    std::vector<int32_t> level = quantize(coeff, showQp, N);
+    printBlock("Level tai QP 32:", level, N);
+    printBlock("Residual goc:", residual, N);
+    printBlock("Residual khoi phuc tai QP 32 (inverseDct(dequantize(level))):", inverseDct(dequantize(level, showQp, N), N), N);
+}
+
 int main(){
     std::cout << "Hello, YUV!" << std::endl;
 
@@ -204,6 +339,9 @@ int main(){
     CtuGridInfo grid = demoCtuGrid(padded.Y, WIDTH, HEIGHT, CTU_SIZE);    // bước 4
     demoRefSamples(padded.Y, CTU_SIZE);                                   // bước 5
     demoDcPredictionOnCtus(padded.Y, grid, CTU_SIZE);                     // bước 6
+    demoRecon(padded, CTU_SIZE);                                          // P2
+    demoDct(padded.Y, grid, CTU_SIZE);                                    // A1.2
+    demoQuant(padded.Y, grid, CTU_SIZE);                                  // A1.3
 
     return 0;
 }

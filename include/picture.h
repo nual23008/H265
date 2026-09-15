@@ -29,8 +29,15 @@ struct Picture {
 // Gán kích thước và cấp phát bộ nhớ cho plane
 void initPlane(Plane& plane, int width, int height);
 
+// Cấp phát cả 3 plane cho ảnh 4:2:0: Y là width x height, U/V là (width/2) x (height/2). Mọi pixel = 0.
+void initPicture(Picture& picture, int width, int height);
+
 // Đọc frame thứ frameIndex (đếm từ 0) của file YUV 4:2:0 8-bit. Trả về false nếu đọc lỗi.
 bool readFrame(std::ifstream& file, int width, int height, int frameIndex, Picture& picture);
+
+// Ghi một frame YUV 4:2:0 8-bit vào cuối file: Y lấy vùng width x height ở góc trên-trái,
+// U/V lấy (width/2) x (height/2). Phần đệm bị bỏ đi. Trả về false nếu ghi lỗi.
+bool writeFrame(std::ofstream& file, const Picture& picture, int width, int height);
 
 // Đệm plane cho chiều rộng/cao chia hết cho blockSize (lặp lại hàng/cột ở mép)
 Plane padPlane(const Plane& src, int blockSize);
@@ -40,3 +47,7 @@ Picture padPicture(const Picture& src, int ctuSize);
 
 // Lấy block N x N có góc trên-trái tại (topRow, leftCol); toạ độ vượt biên được kẹp về mép
 std::vector<int32_t> getBlock(const Plane& plane, int topRow, int leftCol, int N);
+
+// Ghi block N x N vào plane tại (topRow, leftCol) — chiều ngược lại của getBlock.
+// Mỗi giá trị được clip về [0, 255] vì plane chỉ chứa uint8_t. Pixel nằm ngoài plane bị bỏ qua.
+void writeBlock(Plane& plane, int topRow, int leftCol, int N, const std::vector<int32_t>& block);

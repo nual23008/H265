@@ -8,6 +8,13 @@
 
 #include "picture.h"   // Plane
 
+// Số hiệu mode intra theo spec (cả nhóm thống nhất dùng)
+constexpr int kModePlanar    = 0;
+constexpr int kModeDc        = 1;
+constexpr int kModeHor       = 10;
+constexpr int kModeVer       = 26;
+constexpr int kNumIntraModes = 35;   // mode 0..34
+
 // Mẫu tham chiếu (reference samples) cho intra prediction của một block N x N (spec 8.4.4.2).
 // Spec ký hiệu p[x][y]: x = cột, y = hàng, gốc (0,0) là pixel trên-trái của block.
 struct RefSamples {

@@ -12,6 +12,15 @@ std::vector<int32_t> computeResidual(const std::vector<int32_t>& original, const
     return residual;
 }
 
+// Nút cộng bên phải trong sơ đồ encoder: prediction + residual khôi phục
+std::vector<int32_t> addBlocks(const std::vector<int32_t>& a, const std::vector<int32_t>& b) {
+    std::vector<int32_t> sum(a.size());
+    for (size_t i = 0; i < a.size(); ++i) {
+        sum[i] = a[i] + b[i];
+    }
+    return sum;
+}
+
 // SAD (Sum of Absolute Differences): tổng trị tuyệt đối residual. Càng nhỏ -> dự đoán càng tốt.
 long long sumAbsolute(const std::vector<int32_t>& block) {
     long long sum = 0;

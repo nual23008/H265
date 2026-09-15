@@ -11,8 +11,8 @@
 // In min / max / mean của một plane
 void printStats(const char* name, const Plane& plane);
 
-// In block N x N (xếp theo hàng), mỗi số rộng 5 ký tự
-void printBlock(const char* title, const std::vector<int32_t>& block, int N);
+// In block N x N (xếp theo hàng), mỗi số rộng `width` ký tự (hệ số DCT lớn cần width = 7)
+void printBlock(const char* title, const std::vector<int32_t>& block, int N, int width = 5);
 
 // In các phần tử values[begin .. end-1] trên một dòng, có nhãn phía trước
 void printRange(const char* label, const std::vector<int32_t>& values, int begin, int end);
