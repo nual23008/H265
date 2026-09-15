@@ -19,11 +19,11 @@ void printStats(const char* name, const Plane& plane) {
     std::cout << name << " plane: min = " << (int)minVal << ", max = " << (int)maxVal << ", mean = " << mean << std::endl;
 }
 
-void printBlock(const char* title, const std::vector<int32_t>& block, int N) {
+void printBlock(const char* title, const std::vector<int32_t>& block, int N, int width) {
     std::cout << title << std::endl;
     for (int r = 0; r < N; ++r) {
         for (int c = 0; c < N; ++c) {
-            std::cout << std::setw(5) << block[r * N + c];
+            std::cout << std::setw(width) << block[r * N + c];
         }
         std::cout << std::endl;
     }

@@ -1,13 +1,16 @@
 // tools/read_yuv.cpp
 // Chương trình thử: đọc 1 frame YUV thật rồi in dữ liệu qua từng bước.
+#include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <vector>
 
-#include "picture.h"     // Plane, Picture, readFrame, padPicture, getBlock
+#include "picture.h"     // Plane, Picture, readFrame, padPicture, getBlock, writeBlock
 #include "block_ops.h"   // computeResidual, sumAbsolute, blockVariance
 #include "intra_pred.h"  // RefSamples, getRefSamples, computeDcValue, predictDC
+#include "dct.h"         // forwardDct, inverseDct
 #include "debug_print.h" // printStats, printBlock, printRefSamples
 
 // Kết quả bước 4 mà bước 6 cần dùng lại
@@ -198,6 +201,58 @@ void demoRecon(const Picture& padded, int ctuSize) {
     std::cout << "So mau tham chieu khac nhau: " << numDiff << " / " << 4 * ctuSize + 1 << std::endl;
 }
 
+// DCT thuận rồi nghịch cho residual (dự đoán DC) của một CTU: in hệ số, độ nén năng lượng, sai số khôi phục
+void demoDctOnCtu(const char* name, const Plane& plane, int topRow, int leftCol, int N) {
+    RefSamples ref                 = getRefSamples(plane, topRow, leftCol, N);   // tạm dùng ảnh gốc như bước 6
+    std::vector<int32_t> residual  = computeResidual(getBlock(plane, topRow, leftCol, N), predictDC(ref, true));
+    std::vector<int32_t> coeff     = forwardDct(residual, N);
+    std::vector<int32_t> restored  = inverseDct(coeff, N);
+
+    int maxError = 0;
+    for (int i = 0; i < N * N; ++i) {
+        maxError = std::max(maxError, std::abs(restored[i] - residual[i]));
+    }
+
+    // Nén năng lượng: bao nhiêu % năng lượng (tổng bình phương hệ số) nằm ở góc 4x4 tần số thấp
+    double lowEnergy = 0.0, totalEnergy = 0.0;
+    for (int r = 0; r < N; ++r) {
+        for (int c = 0; c < N; ++c) {
+            double e = static_cast<double>(coeff[r * N + c]) * coeff[r * N + c];
+            totalEnergy += e;
+            if (r < 4 && c < 4) lowEnergy += e;
+        }
+    }
+
+    std::cout << name << " (row " << topRow << ", col " << leftCol << "):" << std::endl;
+    printBlock("He so DCT (hang tren = tan so doc thap, cot trai = tan so ngang thap):", coeff, N, 7);
+    if (totalEnergy > 0) {
+        std::cout << "  Nang luong o goc 4x4 tan so thap: " << 100.0 * lowEnergy / totalEnergy << " %" << std::endl;
+    }
+    std::cout << "  Sai so lon nhat |inverseDct(forwardDct(residual)) - residual| = " << maxError << std::endl;
+}
+
+// A1.2: DCT số nguyên
+void demoDct(const Plane& paddedY, const CtuGridInfo& grid, int ctuSize) {
+    std::cout << "\n=== A1.2: DCT so nguyen ===" << std::endl;
+
+    // Kiểm tra 1: block phẳng giá trị 100 -> chỉ còn hệ số DC = 128 * 100, mọi hệ số AC = 0
+    for (int N : {8, 16}) {
+        std::vector<int32_t> flatCoeff = forwardDct(std::vector<int32_t>(N * N, 100), N);
+        int numNonZeroAc = 0;
+        for (int i = 1; i < N * N; ++i) {
+            if (flatCoeff[i] != 0) ++numNonZeroAc;
+        }
+        std::cout << "Block phang 100, N = " << N << ": DC = " << flatCoeff[0]
+                  << ", so he so AC khac 0 = " << numNonZeroAc << std::endl;
+    }
+
+    // Kiểm tra 2: residual thật của 2 CTU từ bước 6
+    demoDctOnCtu("[CTU phang nhat]", paddedY,
+                 (grid.minVarAddr / grid.numCtuCols) * ctuSize, (grid.minVarAddr % grid.numCtuCols) * ctuSize, ctuSize);
+    demoDctOnCtu("[CTU nhieu chi tiet nhat]", paddedY,
+                 (grid.maxVarAddr / grid.numCtuCols) * ctuSize, (grid.maxVarAddr % grid.numCtuCols) * ctuSize, ctuSize);
+}
+
 int main(){
     std::cout << "Hello, YUV!" << std::endl;
 
@@ -245,6 +300,7 @@ int main(){
     demoRefSamples(padded.Y, CTU_SIZE);                                   // bước 5
     demoDcPredictionOnCtus(padded.Y, grid, CTU_SIZE);                     // bước 6
     demoRecon(padded, CTU_SIZE);                                          // P2
+    demoDct(padded.Y, grid, CTU_SIZE);                                    // A1.2
 
     return 0;
 }

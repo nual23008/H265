@@ -17,6 +17,7 @@ SOURCES=(
     src/picture.cpp
     src/block_ops.cpp
     src/intra_pred.cpp
+    src/dct.cpp
 )
 
 mkdir -p out
