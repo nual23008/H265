@@ -22,7 +22,8 @@ SOURCES=(
 )
 
 mkdir -p out
-g++ -std=c++17 -Wall -Wextra -g -Iinclude "${SOURCES[@]}" -o out/read_yuv.exe
+# -static-libstdc++ -static-libgcc: gói thư viện C++ vào exe, tránh nạp nhầm DLL cũ trên PATH (xem build_encoder.sh)
+g++ -std=c++17 -Wall -Wextra -g -static-libstdc++ -static-libgcc -Iinclude "${SOURCES[@]}" -o out/read_yuv.exe
 echo "Build OK: out/read_yuv.exe"
 
 if [ "$1" = "run" ]; then

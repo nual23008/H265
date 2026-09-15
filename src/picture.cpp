@@ -35,6 +35,20 @@ bool readFrame(std::ifstream&file, int width, int height, int frameIndex, Pictur
     return file.good();
 }
 
+// Ghi vùng width x height ở góc trên-trái của plane, từng hàng một
+static void writePlaneRegion(std::ofstream& file, const Plane& plane, int width, int height) {
+    for (int row = 0; row < height; ++row) {
+        file.write(reinterpret_cast<const char*>(&plane.data[plane.getIndex(row, 0)]), width);
+    }
+}
+
+bool writeFrame(std::ofstream& file, const Picture& picture, int width, int height) {
+    writePlaneRegion(file, picture.Y, width, height);
+    writePlaneRegion(file, picture.U, width / 2, height / 2);
+    writePlaneRegion(file, picture.V, width / 2, height / 2);
+    return file.good();
+}
+
 // Đệm plane cho chiều rộng/cao chia hết cho blockSize, bằng cách lặp lại cột/hàng ở mép.
 // Ảnh đã đệm là ảnh encoder thực sự mã hoá. Decoder bỏ phần đệm nhờ conformance window trong SPS.
 Plane padPlane(const Plane& src, int blockSize) {

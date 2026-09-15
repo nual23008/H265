@@ -35,6 +35,10 @@ void initPicture(Picture& picture, int width, int height);
 // Đọc frame thứ frameIndex (đếm từ 0) của file YUV 4:2:0 8-bit. Trả về false nếu đọc lỗi.
 bool readFrame(std::ifstream& file, int width, int height, int frameIndex, Picture& picture);
 
+// Ghi một frame YUV 4:2:0 8-bit vào cuối file: Y lấy vùng width x height ở góc trên-trái,
+// U/V lấy (width/2) x (height/2). Phần đệm bị bỏ đi. Trả về false nếu ghi lỗi.
+bool writeFrame(std::ofstream& file, const Picture& picture, int width, int height);
+
 // Đệm plane cho chiều rộng/cao chia hết cho blockSize (lặp lại hàng/cột ở mép)
 Plane padPlane(const Plane& src, int blockSize);
 
