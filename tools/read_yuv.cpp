@@ -158,6 +158,46 @@ void demoDcPredictionOnCtus(const Plane& paddedY, const CtuGridInfo& grid, int c
                      (grid.maxVarAddr / grid.numCtuCols) * ctuSize, (grid.maxVarAddr % grid.numCtuCols) * ctuSize, ctuSize);
 }
 
+// P2: ảnh tái tạo (recon) và writeBlock
+void demoRecon(const Picture& padded, int ctuSize) {
+    std::cout << "\n=== P2: anh tai tao (recon) ===" << std::endl;
+
+    // Ảnh tái tạo có cùng kích thước ảnh đã đệm, ban đầu toàn 0 (chưa CTU nào được mã hoá)
+    Picture recon;
+    initPicture(recon, padded.Y.width, padded.Y.height);
+    std::cout << "recon Y: " << recon.Y.width << "x" << recon.Y.height
+              << ",  U/V: " << recon.U.width << "x" << recon.U.height << std::endl;
+
+    // Kiểm tra 1: clip. Ghi block 4x4 có giá trị âm và > 255 rồi đọc lại.
+    const std::vector<int32_t> outOfRange = {
+        -300,  -1,   0,    1,
+          50, 128, 200,  254,
+         255, 256, 300, 1000,
+          -5, 260,  77,   99 };
+    writeBlock(recon.Y, 0, 0, 4, outOfRange);
+    printBlock("Ghi vao (truoc clip):", outOfRange, 4);
+    printBlock("Doc lai tu recon (sau clip):", getBlock(recon.Y, 0, 0, 4), 4);
+
+    // Kiểm tra 2: vì sao tham chiếu phải lấy từ recon.
+    // Giả lập CTU 0 bị lượng tử hoá làm lệch +5 so với ảnh gốc, ghi vào recon,
+    // rồi lấy mẫu tham chiếu cho CTU 1 (row 0, col 16) từ recon và từ ảnh gốc.
+    std::vector<int32_t> lossyCtu0 = getBlock(padded.Y, 0, 0, ctuSize);
+    for (int32_t& v : lossyCtu0) v += 5;
+    writeBlock(recon.Y, 0, 0, ctuSize, lossyCtu0);
+
+    RefSamples fromRecon    = getRefSamples(recon.Y,  0, ctuSize, ctuSize);
+    RefSamples fromOriginal = getRefSamples(padded.Y, 0, ctuSize, ctuSize);
+    printRefSamples("CTU 1 - tham chieu tu anh GOC:", fromOriginal);
+    printRefSamples("CTU 1 - tham chieu tu RECON (decoder chi co cai nay):", fromRecon);
+
+    int numDiff = (fromRecon.corner != fromOriginal.corner) ? 1 : 0;
+    for (int i = 0; i < 2 * ctuSize; ++i) {
+        if (fromRecon.top[i]  != fromOriginal.top[i])  ++numDiff;
+        if (fromRecon.left[i] != fromOriginal.left[i]) ++numDiff;
+    }
+    std::cout << "So mau tham chieu khac nhau: " << numDiff << " / " << 4 * ctuSize + 1 << std::endl;
+}
+
 int main(){
     std::cout << "Hello, YUV!" << std::endl;
 
@@ -204,6 +244,7 @@ int main(){
     CtuGridInfo grid = demoCtuGrid(padded.Y, WIDTH, HEIGHT, CTU_SIZE);    // bước 4
     demoRefSamples(padded.Y, CTU_SIZE);                                   // bước 5
     demoDcPredictionOnCtus(padded.Y, grid, CTU_SIZE);                     // bước 6
+    demoRecon(padded, CTU_SIZE);                                          // P2
 
     return 0;
 }
