@@ -53,7 +53,9 @@ cmake -S . -B build && cmake --build build && (cd build && ctest --output-on-fai
 
 ## Ghép Intra Estimation / Prediction
 
-Trong `tools/encoder.cpp` có 2 hàm đánh dấu `TODO` cần thay:
+Hướng dẫn chi tiết từng bước (cài công cụ, git, công thức, test có đáp án, bảng kết quả tham chiếu): [docs/INTRA_GUIDE.md](docs/INTRA_GUIDE.md).
+
+Tóm tắt: trong `tools/encoder.cpp` có 2 hàm đánh dấu `TODO` cần thay:
 
 ```cpp
 int chooseLumaMode(const std::vector<int32_t>& original, const RefSamples& ref);   // chọn mode (SAD / SSD)

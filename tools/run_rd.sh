@@ -28,5 +28,12 @@ for qp in "${QPS[@]}"; do
     ./out/encoder.exe "$qp" "${FRAME_ARGS[@]}" --out "$OUT_DIR"
 done
 
+# Windows thường có lệnh "python", Linux thường chỉ có "python3"
+if command -v python >/dev/null 2>&1; then
+    PYTHON=python
+else
+    PYTHON=python3
+fi
+
 echo
-python tools/plot_rd.py "$OUT_DIR/results.csv" "$OUT_DIR/rd_curve.png"
+"$PYTHON" tools/plot_rd.py "$OUT_DIR/results.csv" "$OUT_DIR/rd_curve.png"
