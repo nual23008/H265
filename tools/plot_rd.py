@@ -1,5 +1,6 @@
 # tools/plot_rd.py
-# Vẽ đường cong RD từ results.csv: trục hoành bpp (ước lượng entropy), trục tung PSNR_Y (trung bình các frame).
+# Vẽ đường cong RD từ results.csv: trục hoành bpp (ước lượng entropy, Y + U + V),
+# trục tung PSNR (trung bình các frame). Hai đồ thị: PSNR_Y và PSNR_YUV = (6Y + U + V) / 8.
 # Mỗi giá trị cột "predictor" (vd dc-only, sau này sad / ssd) là một đường.
 #
 # Cách dùng: python tools/plot_rd.py [Output/results.csv] [Output/rd_curve.png]
@@ -32,27 +33,29 @@ def main():
         print("Khong co dong tq_mode = normal trong", csv_path)
         return
 
-    curves = defaultdict(list)           # predictor -> [(bpp, psnr, qp), ...]
-    print("predictor   QP  frames     bpp   PSNR_Y   nnz/frame")
+    curves = defaultdict(list)           # predictor -> [(bpp, psnr_y, psnr_yuv, qp), ...]
+    print("predictor   QP  frames     bpp   PSNR_Y   PSNR_U   PSNR_V PSNR_YUV")
     for (predictor, qp), rows in sorted(groups.items()):
-        bpp  = mean([float(r["bpp"]) for r in rows])
-        psnr = mean([float(r["psnr_y"]) for r in rows])
-        nnz  = mean([int(r["nnz"]) for r in rows])
-        curves[predictor].append((bpp, psnr, qp))
-        print(f"{predictor:10s} {qp:3d} {len(rows):7d} {bpp:7.4f} {psnr:8.4f} {nnz:11.0f}")
+        bpp      = mean([float(r["bpp"]) for r in rows])
+        psnr_y   = mean([float(r["psnr_y"]) for r in rows])
+        psnr_u   = mean([float(r["psnr_u"]) for r in rows])
+        psnr_v   = mean([float(r["psnr_v"]) for r in rows])
+        psnr_yuv = mean([float(r["psnr_yuv"]) for r in rows])
+        curves[predictor].append((bpp, psnr_y, psnr_yuv, qp))
+        print(f"{predictor:10s} {qp:3d} {len(rows):7d} {bpp:7.4f} {psnr_y:8.4f} {psnr_u:8.4f} {psnr_v:8.4f} {psnr_yuv:8.4f}")
 
-    fig, ax = plt.subplots(figsize=(7, 5))
-    for predictor, points in curves.items():
-        points.sort()                    # sắp theo bpp tăng dần để nối đường
-        ax.plot([p[0] for p in points], [p[1] for p in points], marker="o", label=predictor)
-        for bpp, psnr, qp in points:
-            ax.annotate(f"QP {qp}", (bpp, psnr), textcoords="offset points", xytext=(6, -12), fontsize=8)
-
-    ax.set_xlabel("bpp (uoc luong entropy, chi luma)")
-    ax.set_ylabel("PSNR_Y (dB)")
-    ax.set_title("Duong cong RD")
-    ax.grid(True, alpha=0.3)
-    ax.legend()
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    for ax, index, label in ((axes[0], 1, "PSNR_Y (dB)"), (axes[1], 2, "PSNR_YUV = (6Y + U + V) / 8 (dB)")):
+        for predictor, points in curves.items():
+            points = sorted(points)      # sắp theo bpp tăng dần để nối đường
+            ax.plot([p[0] for p in points], [p[index] for p in points], marker="o", label=predictor)
+            for p in points:
+                ax.annotate(f"QP {p[3]}", (p[0], p[index]), textcoords="offset points", xytext=(6, -12), fontsize=8)
+        ax.set_xlabel("bpp (uoc luong entropy, Y + U + V)")
+        ax.set_ylabel(label)
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+    fig.suptitle("Duong cong RD")
     fig.savefig(png_path, dpi=120, bbox_inches="tight")
     print("Da ghi", png_path)
 
