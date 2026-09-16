@@ -3,8 +3,10 @@
 // Dự đoán: tạm thời chỉ có DC; chroma dùng lại mode của luma (DM). Chroma dùng cùng QP với luma.
 //
 // Cách dùng (đứng ở thư mục H265):
-//   ./out/encoder.exe [QP] [--frames K] [--out DIR] [--no-quant | --bypass]
+//   ./out/encoder.exe [QP] [--input FILE] [--size RONGxCAO] [--frames K] [--out DIR] [--no-quant | --bypass]
 //     QP          : 0..51, mặc định 32
+//     --input FILE: file YUV 4:2:0 8-bit, mặc định Input/Input.yuv (tạo bằng tools/prepare_input.sh)
+//     --size WxH  : kích thước frame của file đó, mặc định 1920x1080
 //     --frames K  : chỉ mã hoá K frame đầu (mặc định: mọi frame trong file)
 //     --out DIR   : thư mục kết quả, mặc định Output. Ghi DIR/recon_qp<QP>.yuv và thêm dòng vào DIR/results.csv
 //     --no-quant  : DCT -> IDCT, bỏ lượng tử hoá (chỉ còn sai số làm tròn của DCT)
@@ -196,12 +198,12 @@ FrameResult encodeFrame(const Picture& picture, const Picture& padded, Picture& 
 }
 
 int main(int argc, char* argv[]) {
-    const int WIDTH    = 1920;
-    const int HEIGHT   = 1080;
     const int CTU_SIZE = 16;
-    const std::string INPUT_PATH = "Input/Input.yuv";
 
-    // ---- Đọc tham số dòng lệnh
+    // ---- Tham số, đổi được bằng cờ dòng lệnh
+    int width  = 1920;
+    int height = 1080;
+    std::string inputPath = "Input/Input.yuv";
     int qp = 32;
     int maxFrames = 0;               // 0 = mọi frame
     std::string outDir = "Output";
@@ -216,6 +218,21 @@ int main(int argc, char* argv[]) {
             maxFrames = std::atoi(argv[++i]);          // ++i: lấy luôn tham số kế tiếp làm giá trị
         } else if (arg == "--out" && i + 1 < argc) {
             outDir = argv[++i];
+        } else if (arg == "--input" && i + 1 < argc) {
+            inputPath = argv[++i];
+        } else if (arg == "--size" && i + 1 < argc) {
+            const std::string value = argv[++i];
+            const size_t separator = value.find('x');                       // dạng "1920x1080"
+            width  = (separator == std::string::npos) ? 0 : std::atoi(value.substr(0, separator).c_str());
+            height = (separator == std::string::npos) ? 0 : std::atoi(value.substr(separator + 1).c_str());
+            if (width <= 0 || height <= 0 || width % 2 != 0 || height % 2 != 0) {
+                std::cerr << "Error: --size phai co dang RONGxCAO voi hai so chan (4:2:0). Vi du: --size 1920x800." << std::endl;
+                return 1;
+            }
+        } else if (arg == "--help" || arg == "-h") {
+            std::cout << "Dung: ./out/encoder.exe [QP] [--input FILE] [--size RONGxCAO] [--frames K] [--out DIR]"
+                         " [--no-quant | --bypass]" << std::endl;
+            return 0;
         } else if (arg.rfind("--", 0) == 0) {          // bắt đầu bằng "--" nhưng không phải cờ đã biết
             std::cerr << "Error: co khong hop le hoac thieu gia tri '" << arg << "'." << std::endl;
             return 1;
@@ -229,16 +246,17 @@ int main(int argc, char* argv[]) {
     }
 
     // ---- Mở file vào, đếm số frame
-    std::ifstream inputFile(INPUT_PATH, std::ios::binary);
+    std::ifstream inputFile(inputPath, std::ios::binary);
     if (!inputFile) {
-        std::cerr << "Error: Could not open file '" << INPUT_PATH << "'." << std::endl;
+        std::cerr << "Error: Could not open file '" << inputPath << "'." << std::endl;
         return 1;
     }
-    const long long frameSize = static_cast<long long>(WIDTH) * HEIGHT * 3 / 2;
+    const long long frameSize = static_cast<long long>(width) * height * 3 / 2;
     inputFile.seekg(0, std::ios::end);
     const long long fileSize = inputFile.tellg();
     if (fileSize % frameSize != 0) {
-        std::cerr << "Error: File size is not a multiple of frame size. Check WIDTH/HEIGHT." << std::endl;
+        std::cerr << "Error: Kich thuoc file (" << fileSize << " byte) khong chia het cho kich thuoc frame ("
+                  << frameSize << " byte). Kiem tra lai --size." << std::endl;
         return 1;
     }
     const int numFramesInFile = static_cast<int>(fileSize / frameSize);
@@ -263,7 +281,7 @@ int main(int argc, char* argv[]) {
                    "mse_y,mse_u,mse_v,psnr_y,psnr_u,psnr_v,psnr_yuv,planar,dc,hor,ver,time_ms\n";
     }
 
-    std::cout << "Input: " << INPUT_PATH << " (" << WIDTH << "x" << HEIGHT << ", " << numFramesInFile << " frame)"
+    std::cout << "Input: " << inputPath << " (" << width << "x" << height << ", " << numFramesInFile << " frame)"
               << ",  ma hoa " << numFrames << " frame" << std::endl;
     std::cout << "QP " << qp << " (Qstep = " << qStep(qp) << "),  che do T/Q: " << tqModeName(tqMode) << std::endl;
     std::cout << " frame       bits     bpp   PSNR_Y   PSNR_U   PSNR_V PSNR_YUV  time_ms" << std::endl;
@@ -275,7 +293,7 @@ int main(int argc, char* argv[]) {
 
     for (int frameIndex = 0; frameIndex < numFrames; ++frameIndex) {
         Picture picture;
-        if (!readFrame(inputFile, WIDTH, HEIGHT, frameIndex, picture)) {
+        if (!readFrame(inputFile, width, height, frameIndex, picture)) {
             std::cerr << "Error: Could not read frame " << frameIndex << "." << std::endl;
             return 1;
         }
@@ -284,13 +302,13 @@ int main(int argc, char* argv[]) {
         initPicture(recon, padded.Y.width, padded.Y.height);
 
         const FrameResult r = encodeFrame(picture, padded, recon, CTU_SIZE, qp, tqMode);
-        if (!writeFrame(reconFile, recon, WIDTH, HEIGHT)) {
+        if (!writeFrame(reconFile, recon, width, height)) {
             std::cerr << "Error: Ghi recon that bai." << std::endl;
             return 1;
         }
 
         const double totalBits = r.bitsY + r.bitsC + r.modeBits;
-        const double bpp = totalBits / (static_cast<double>(WIDTH) * HEIGHT);   // bit trên mỗi pixel luma
+        const double bpp = totalBits / (static_cast<double>(width) * height);   // bit trên mỗi pixel luma
         sumBpp     += bpp;
         sumPsnrY   += r.psnrY;
         sumPsnrU   += r.psnrU;
@@ -330,7 +348,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Mode: planar = " << totalModeCount[kModePlanar] << ", dc = " << totalModeCount[kModeDc]
               << ", hor = " << totalModeCount[kModeHor] << ", ver = " << totalModeCount[kModeVer] << std::endl;
     std::cout << "Da ghi: " << reconPath << "  va  " << csvPath << std::endl;
-    std::cout << "Xem recon: ffplay -f rawvideo -pixel_format yuv420p -video_size " << WIDTH << "x" << HEIGHT
+    std::cout << "Xem recon: ffplay -f rawvideo -pixel_format yuv420p -video_size " << width << "x" << height
               << " " << reconPath << std::endl;
     return 0;
 }

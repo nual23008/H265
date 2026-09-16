@@ -5,3 +5,5 @@ build/
 .vscode/
 out/
 Output/
+Input/*.yuv
+!Input/Input.yuv
