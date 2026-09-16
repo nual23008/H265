@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/simple_codec_test.dir/link.d CMakeFiles/simple_codec_test.dir/tests/simple_codec_test.cpp.o -o simple_codec_test  libsimple_codec.a

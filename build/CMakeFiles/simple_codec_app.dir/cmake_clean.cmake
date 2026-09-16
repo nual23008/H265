@@ -1,0 +1,12 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/simple_codec_app.dir/link.d"
+  "CMakeFiles/simple_codec_app.dir/src/main.cpp.o"
+  "CMakeFiles/simple_codec_app.dir/src/main.cpp.o.d"
+  "simple_codec_app"
+  "simple_codec_app.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/simple_codec_app.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

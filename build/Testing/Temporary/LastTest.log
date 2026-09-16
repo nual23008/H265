@@ -1,0 +1,19 @@
+Start testing: Sep 16 01:50 +07
+----------------------------------------------------------
+1/1 Testing: simple_codec_test
+1/1 Test: simple_codec_test
+Command: "/home/luan/Desktop/VScode/H265/build/simple_codec_test"
+Directory: /home/luan/Desktop/VScode/H265/build
+"simple_codec_test" start time: Sep 16 01:50 +07
+Output:
+----------------------------------------------------------
+Tat ca test da pass.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"simple_codec_test" end time: Sep 16 01:50 +07
+"simple_codec_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 16 01:50 +07
