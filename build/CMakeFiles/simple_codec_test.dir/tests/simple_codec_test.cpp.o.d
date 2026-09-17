@@ -166,8 +166,12 @@ CMakeFiles/simple_codec_test.dir/tests/simple_codec_test.cpp.o: \
  /usr/include/x86_64-linux-gnu/c++/15/bits/c++io.h \
  /usr/include/c++/15/bits/fstream.tcc \
  /home/luan/Desktop/VScode/H265/header/transform.h \
- /usr/include/c++/15/cassert /usr/include/assert.h \
- /usr/include/c++/15/cmath /usr/include/math.h \
+ /usr/include/c++/15/algorithm /usr/include/c++/15/bits/stl_algo.h \
+ /usr/include/c++/15/bits/algorithmfwd.h \
+ /usr/include/c++/15/bits/stl_heap.h \
+ /usr/include/c++/15/bits/uniform_int_dist.h \
+ /usr/include/c++/15/bits/stl_tempbuf.h /usr/include/c++/15/cassert \
+ /usr/include/assert.h /usr/include/c++/15/cmath /usr/include/math.h \
  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
  /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \

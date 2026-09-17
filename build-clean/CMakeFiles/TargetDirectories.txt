@@ -1,0 +1,4 @@
+/home/luan/Desktop/VScode/H265/build-clean/CMakeFiles/simple_codec.dir
+/home/luan/Desktop/VScode/H265/build-clean/CMakeFiles/simple_codec_app.dir
+/home/luan/Desktop/VScode/H265/build-clean/CMakeFiles/edit_cache.dir
+/home/luan/Desktop/VScode/H265/build-clean/CMakeFiles/rebuild_cache.dir

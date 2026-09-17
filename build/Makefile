@@ -65,16 +65,6 @@ CMAKE_BINARY_DIR = /home/luan/Desktop/VScode/H265/build
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target test
-test:
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/usr/bin/ctest $(ARGS)
-.PHONY : test
-
-# Special rule for the target test
-test/fast: test
-.PHONY : test/fast
-
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "No interactive CMake dialog available..."
@@ -151,19 +141,6 @@ simple_codec_app: cmake_check_build_system
 simple_codec_app/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/simple_codec_app.dir/build.make CMakeFiles/simple_codec_app.dir/build
 .PHONY : simple_codec_app/fast
-
-#=============================================================================
-# Target rules for targets named simple_codec_test
-
-# Build rule for target.
-simple_codec_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 simple_codec_test
-.PHONY : simple_codec_test
-
-# fast build rule for target.
-simple_codec_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simple_codec_test.dir/build.make CMakeFiles/simple_codec_test.dir/build
-.PHONY : simple_codec_test/fast
 
 src/lib.o: src/lib.cpp.o
 .PHONY : src/lib.o
@@ -309,30 +286,6 @@ src/transform.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/simple_codec.dir/build.make CMakeFiles/simple_codec.dir/src/transform.cpp.s
 .PHONY : src/transform.cpp.s
 
-tests/simple_codec_test.o: tests/simple_codec_test.cpp.o
-.PHONY : tests/simple_codec_test.o
-
-# target to build an object file
-tests/simple_codec_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simple_codec_test.dir/build.make CMakeFiles/simple_codec_test.dir/tests/simple_codec_test.cpp.o
-.PHONY : tests/simple_codec_test.cpp.o
-
-tests/simple_codec_test.i: tests/simple_codec_test.cpp.i
-.PHONY : tests/simple_codec_test.i
-
-# target to preprocess a source file
-tests/simple_codec_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simple_codec_test.dir/build.make CMakeFiles/simple_codec_test.dir/tests/simple_codec_test.cpp.i
-.PHONY : tests/simple_codec_test.cpp.i
-
-tests/simple_codec_test.s: tests/simple_codec_test.cpp.s
-.PHONY : tests/simple_codec_test.s
-
-# target to generate assembly for a file
-tests/simple_codec_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/simple_codec_test.dir/build.make CMakeFiles/simple_codec_test.dir/tests/simple_codec_test.cpp.s
-.PHONY : tests/simple_codec_test.cpp.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -341,10 +294,8 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... test"
 	@echo "... simple_codec"
 	@echo "... simple_codec_app"
-	@echo "... simple_codec_test"
 	@echo "... src/lib.o"
 	@echo "... src/lib.i"
 	@echo "... src/lib.s"
@@ -363,9 +314,6 @@ help:
 	@echo "... src/transform.o"
 	@echo "... src/transform.i"
 	@echo "... src/transform.s"
-	@echo "... tests/simple_codec_test.o"
-	@echo "... tests/simple_codec_test.i"
-	@echo "... tests/simple_codec_test.s"
 .PHONY : help
 
 

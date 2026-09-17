@@ -1,9 +1,11 @@
 #include "lib.h"
 
+#include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <string>
 
 int main(int argc, char* argv[]) {
@@ -48,25 +50,34 @@ int main(int argc, char* argv[]) {
 
     Picture originalPicture;
     int frameNumber = 0;
-    double totalPSNR = 0.0;
+    double totalMSE = 0.0;
 
     std::cout << std::fixed << std::setprecision(4);
 
     while (ReadYUV420Frame(input, width, height, originalPicture)) {
         Picture reconstructedPicture = originalPicture;
         reconstructedPicture.Y = ReconstructPlane(originalPicture.Y, quantStep, 8);
+        reconstructedPicture.U = ReconstructPlane(originalPicture.U, quantStep, 4);
+        reconstructedPicture.V = ReconstructPlane(originalPicture.V, quantStep, 4);
 
         if (!WriteYUV420Frame(output, reconstructedPicture)) {
             std::cout << "Loi khi ghi output\n";
             return 1;
         }
 
-        double psnr = PSNR(originalPicture.Y, reconstructedPicture.Y);
-        totalPSNR = totalPSNR + psnr;
+        double mse = MSE(originalPicture, reconstructedPicture);
+        double psnr = (mse == 0.0)
+                          ? std::numeric_limits<double>::infinity()
+                          : 10.0 * std::log10(255.0 * 255.0 / mse);
+
+        totalMSE = totalMSE + mse;
         frameNumber++;
 
         std::cout << "Frame " << frameNumber
-                  << ": PSNR-Y = " << psnr << " dB\n";
+                  << ": PSNR = " << psnr << " dB\n";
+
+        
+        
     }
 
     if (frameNumber == 0) {
@@ -74,8 +85,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::cout << "PSNR-Y trung binh = "
-              << totalPSNR / frameNumber << " dB\n";
+    double averageMSE = totalMSE / frameNumber;
+    double averagePSNR = (averageMSE == 0.0)
+                             ? std::numeric_limits<double>::infinity()
+                             : 10.0 * std::log10(255.0 * 255.0 / averageMSE);
+
+    std::cout << "PSNR trung binh = "
+              << averagePSNR << " dB\n";
     std::cout << "Da ghi " << frameNumber
               << " frame vao " << outputName << "\n";
     return 0;

@@ -27,6 +27,6 @@ std::vector<uint8_t> AngularPrediction(const std::vector<uint8_t>& top, const st
 
 std::vector<uint8_t> IntraPrediction(const Plane& reconstructedFrame, int blockRow, int blockCol, int blockSize,int mode);
 
-int CalculateSAD(const std::vector<uint8_t>& originalBlock, const std::vector<uint8_t>& predictionBlock);
+int CalculateSAD(const std::vector<uint8_t>& originalBlock, const std::vector<uint8_t>& predictionBlock, int block_size);
 
 int EstimateIntraMode(const std::vector<uint8_t>& originalBlock, const Plane& reconstructedPlane, int blockRow, int blockCol, int blockSize);

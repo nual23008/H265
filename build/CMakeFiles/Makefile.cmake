@@ -49,5 +49,4 @@ set(CMAKE_MAKEFILE_PRODUCTS
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/simple_codec.dir/DependInfo.cmake"
   "CMakeFiles/simple_codec_app.dir/DependInfo.cmake"
-  "CMakeFiles/simple_codec_test.dir/DependInfo.cmake"
   )

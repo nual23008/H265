@@ -39,7 +39,7 @@ int ClipPixel(int value) {
 std::vector<uint8_t> ReconstructBlock(const std::vector<uint8_t>& predictionBlock, const std::vector<int16_t>& decodedResidual, int block_size) {
     std::vector<uint8_t> reconstructedBlock(block_size * block_size);
 
-    for (int i = 0; i < 64; i++) {
+    for (int i = 0; i < block_size * block_size; i++) {
         int value = predictionBlock[i] + decodedResidual[i];
         reconstructedBlock[i] = static_cast<uint8_t>(ClipPixel(value));
     }
@@ -61,7 +61,7 @@ Plane ReconstructPlane(const Plane& originalPlane, int quantStep, int block_size
     int width = originalPlane.width;
     int height = originalPlane.height;
 
-    if (width <= 0 || height <= 0 || width % 8 != 0 || height % 8 != 0) {
+    if (width <= 0 || height <= 0 || width % block_size != 0 || height % block_size != 0) {
         throw std::invalid_argument("Chieu rong va chieu cao phai chia het cho 8");
     }
     if (static_cast<int>(originalPlane.data.size()) != width * height) {
@@ -76,23 +76,23 @@ Plane ReconstructPlane(const Plane& originalPlane, int quantStep, int block_size
     reconstructedPlane.height = height;
     reconstructedPlane.data.assign(width * height, 0);
 
-    for (int blockRow = 0; blockRow < height; blockRow = blockRow + 8) {
-        for (int blockCol = 0; blockCol < width; blockCol = blockCol + 8) {
+    for (int blockRow = 0; blockRow < height; blockRow = blockRow + block_size) {
+        for (int blockCol = 0; blockCol < width; blockCol = blockCol + block_size) {
             std::vector<uint8_t> originalBlock = GetBlock8x8(originalPlane, blockRow, blockCol, block_size);
 
-            int mode = EstimateIntraMode(originalBlock, reconstructedPlane, blockRow, blockCol, 8);
+            int mode = EstimateIntraMode(originalBlock, reconstructedPlane, blockRow, blockCol, block_size);
 
-            std::vector<uint8_t> predictionBlock = IntraPrediction(reconstructedPlane, blockRow, blockCol, 8, mode);
+            std::vector<uint8_t> predictionBlock = IntraPrediction(reconstructedPlane, blockRow, blockCol, block_size, mode);
 
-            std::vector<int16_t> residual = Residual(originalBlock, predictionBlock);
+            std::vector<int16_t> residual = Residual(originalBlock, predictionBlock, block_size);
 
-            std::vector<int16_t> coefficients = Transform8x8(residual);
+            std::vector<int16_t> coefficients = Transform8x8(residual, block_size);
 
-            std::vector<int16_t> levels = Quantize(coefficients, quantStep);
+            std::vector<int16_t> levels = Quantize(coefficients, quantStep, block_size);
 
-            std::vector<int16_t> decodedCoefficients = Dequantize(levels, quantStep);
+            std::vector<int16_t> decodedCoefficients = Dequantize(levels, quantStep, block_size);
 
-            std::vector<int16_t> decodedResidual = InverseTransform8x8(decodedCoefficients);
+            std::vector<int16_t> decodedResidual = InverseTransform8x8(decodedCoefficients, block_size);
 
             std::vector<uint8_t> reconstructedBlock = ReconstructBlock(predictionBlock, decodedResidual, block_size);
 
@@ -103,27 +103,63 @@ Plane ReconstructPlane(const Plane& originalPlane, int quantStep, int block_size
     return reconstructedPlane;
 }
 
-double PSNR(const Plane& originalPlane, const Plane& reconstructedPlane) {
-    if (originalPlane.width != reconstructedPlane.width ||
-        originalPlane.height != reconstructedPlane.height ||
-        originalPlane.data.size() != reconstructedPlane.data.size() ||
-        originalPlane.data.empty()) {
-        throw std::invalid_argument("Hai frame phai co cung kich thuoc");
+double MSE(const Picture& original, const Picture& reconstructed) {
+    if (original.Y.width  != reconstructed.Y.width ||
+        original.Y.height != reconstructed.Y.height ||
+        original.U.width  != reconstructed.U.width ||
+        original.U.height != reconstructed.U.height ||
+        original.V.width  != reconstructed.V.width ||
+        original.V.height != reconstructed.V.height ||
+        original.Y.data.size() != reconstructed.Y.data.size() ||
+        original.U.data.size() != reconstructed.U.data.size() ||
+        original.V.data.size() != reconstructed.V.data.size() ||
+        original.Y.data.empty() ||
+        original.U.data.empty() ||
+        original.V.data.empty()
+        ) {
+            throw std::invalid_argument("size error, original frame and reconstructed frame must have the sane size!");
     }
 
     double sumSquaredError = 0.0;
+    size_t Y_size = static_cast<size_t>(original.Y.data.size());
+    size_t UV_size = static_cast<size_t>(original.U.data.size());
 
-    for (int i = 0; i < static_cast<int>(originalPlane.data.size()); i++) {
-        double difference = static_cast<int>(originalPlane.data[i]) - static_cast<int>(reconstructedPlane.data[i]);
-        sumSquaredError = sumSquaredError + difference * difference;
+    /*=====================================================================================================*/
+    // MSE for plane Y
+    for (int i = 0; i < Y_size; i++) {
+        double diff = static_cast<int>(original.Y.data[i]) - static_cast<int>(reconstructed.Y.data[i]);
+        sumSquaredError += diff * diff;
     }
+    double MSE_Y = sumSquaredError / original.Y.data.size();
+    sumSquaredError = 0.0;
 
-    double mse = sumSquaredError / originalPlane.data.size();
-    if (mse == 0.0) {
+    // MSE for plane U
+    for (int i = 0; i < UV_size; i++) {
+        double diff = static_cast<int>(original.U.data[i]) - static_cast<int>(reconstructed.U.data[i]);
+        sumSquaredError += diff * diff;
+    }
+    double MSE_U = sumSquaredError / original.U.data.size();
+    sumSquaredError = 0.0;
+
+    // MSE for plane V
+    for (int i = 0; i < UV_size; i++) {
+        double diff = static_cast<int>(original.V.data[i]) - static_cast<int>(reconstructed.V.data[i]);
+        sumSquaredError += diff * diff;
+    }
+    double MSE_V = sumSquaredError / original.V.data.size();
+
+    return (4 * MSE_Y + MSE_U + MSE_V) / 6;
+    /*=====================================================================================================*/
+}
+
+double PSNR(const Picture& original, const Picture& reconstructed) {
+    double MSE_YUV = MSE(original, reconstructed);
+
+    if (MSE_YUV == 0.0) {
         return std::numeric_limits<double>::infinity();
     }
 
-    return 10.0 * std::log10(255.0 * 255.0 / mse);
+    return 10.0 * std::log10(255.0 * 255.0 / MSE_YUV);
 }
 
 bool ReadYUV420Frame(std::ifstream& input, int width, int height, Picture& picture) {
@@ -164,14 +200,10 @@ bool ReadYUV420Frame(std::ifstream& input, int width, int height, Picture& pictu
 }
 
 bool WriteYUV420Frame(std::ofstream& output, const Picture& picture) {
-    output.write(
-        reinterpret_cast<const char*>(picture.Y.data.data()),
-        picture.Y.data.size());
-    output.write(
-        reinterpret_cast<const char*>(picture.U.data.data()),
-        picture.U.data.size());
-    output.write(
-        reinterpret_cast<const char*>(picture.V.data.data()),
-        picture.V.data.size());
+    output.write(reinterpret_cast<const char*>(picture.Y.data.data()), picture.Y.data.size());
+
+    output.write(reinterpret_cast<const char*>(picture.U.data.data()), picture.U.data.size());
+
+    output.write(reinterpret_cast<const char*>(picture.V.data.data()), picture.V.data.size());
     return output.good();
 }

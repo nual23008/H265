@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/simple_codec_app.dir/link.d CMakeFiles/simple_codec_app.dir/src/main.cpp.o -o simple_codec_app  libsimple_codec.a

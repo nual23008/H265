@@ -28,13 +28,15 @@ std::vector<uint8_t> GetBlock8x8(const Plane& plane, int blockRow, int blockCol,
 
 int ClipPixel(int value);
 
-std::vector<uint8_t> ReconstructBlock(const std::vector<uint8_t>& predictionBlock, const std::vector<int>& decodedResidual, int block_size);
+std::vector<uint8_t> ReconstructBlock(const std::vector<uint8_t>& predictionBlock, const std::vector<int16_t>& decodedResidual, int block_size);
 
 void WriteBlock8x8(Plane& plane, int blockRow, int blockCol, const std::vector<uint8_t>& block, int block_size);
 
 Plane ReconstructPlane(const Plane& originalPlane, int quantStep, int block_size);
 
-double PSNR(const Plane& originalPlane, const Plane& reconstructedPlane);
+double MSE(const Picture& original, const Picture& reconstructed);
+
+double PSNR(const Picture& original, const Picture& reconstructed);
 
 bool ReadYUV420Frame(std::ifstream& input, int width, int height, Picture& picture);
 

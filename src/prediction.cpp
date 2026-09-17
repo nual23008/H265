@@ -209,10 +209,10 @@ std::vector<uint8_t> IntraPrediction(const Plane& reconstructedFrame, int blockR
     return AngularPrediction(top, left, topLeft, blockSize, mode);
 }
 
-int CalculateSAD(const std::vector<uint8_t>& originalBlock, const std::vector<uint8_t>& predictionBlock) {
+int CalculateSAD(const std::vector<uint8_t>& originalBlock, const std::vector<uint8_t>& predictionBlock, int block_size) {
     int sad = 0;
 
-    for (int i = 0; i < 64; i++) {
+    for (int i = 0; i < block_size * block_size; i++) {
         sad = sad + std::abs(static_cast<int>(originalBlock[i]) - static_cast<int>(predictionBlock[i]));
     }
 
@@ -226,7 +226,7 @@ int EstimateIntraMode(const std::vector<uint8_t>& originalBlock, const Plane& re
     // HEVC co 35 mode: Planar, DC va 33 mode Angular.
     for (int mode = 0; mode <= 34; mode++) {
         std::vector<uint8_t> prediction = IntraPrediction(reconstructedPlane, blockRow, blockCol, blockSize, mode);
-        int sad = CalculateSAD(originalBlock, prediction);
+        int sad = CalculateSAD(originalBlock, prediction, blockSize);
 
         if (sad < bestSad) {
             bestSad = sad;

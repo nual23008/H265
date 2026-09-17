@@ -1,0 +1,2 @@
+/usr/bin/ar qc libsimple_codec.a CMakeFiles/simple_codec.dir/src/lib.cpp.o CMakeFiles/simple_codec.dir/src/prediction.cpp.o CMakeFiles/simple_codec.dir/src/residual.cpp.o CMakeFiles/simple_codec.dir/src/transform.cpp.o CMakeFiles/simple_codec.dir/src/quantization.cpp.o
+/usr/bin/ranlib libsimple_codec.a

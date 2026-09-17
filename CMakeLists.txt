@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+
 project(simple_h265_pipeline LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -11,13 +12,11 @@ add_library(simple_codec
     src/transform.cpp
     src/quantization.cpp
 )
+
 target_include_directories(simple_codec PUBLIC header)
 
-add_executable(simple_codec_app src/main.cpp)
+add_executable(simple_codec_app
+    src/main.cpp
+)
+
 target_link_libraries(simple_codec_app PRIVATE simple_codec)
-
-add_executable(simple_codec_test tests/simple_codec_test.cpp)
-target_link_libraries(simple_codec_test PRIVATE simple_codec)
-
-enable_testing()
-add_test(NAME simple_codec_test COMMAND simple_codec_test)
